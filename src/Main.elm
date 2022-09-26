@@ -1,7 +1,8 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, div, text)
+import Svg exposing (..)
+import Svg.Attributes exposing (..)
 
 main =
   Browser.sandbox { init = 0, update = update, view = view }
@@ -13,6 +14,22 @@ update msg model =
     Update ->
       model
 
+imgWidth
+  = 400
+
+imgHeight
+  = 400
+
 view model =
-  div []
-    [ text "Locust has Landed" ]
+  svg
+    [ width ( String.fromFloat imgWidth )
+    , height ( String.fromFloat imgHeight )
+    , viewBox "0 0 400 400"
+    ]
+    [ text_
+      [ x ( String.fromFloat (imgWidth / 2) )
+      , y ( String.fromFloat (imgHeight / 2) )
+      , fill "green"
+      ]
+      [ text "Locust has Landed" ]
+    ]
