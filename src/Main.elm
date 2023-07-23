@@ -3,7 +3,8 @@ module Main exposing (main)
 import Browser
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Grid
+import Array exposing (Array)
+-- import Grid
 
 main =
   Browser.sandbox
@@ -13,7 +14,7 @@ main =
     }
 
 init =
-  Grid.initialize
+  initGrid
     gridWidth
     gridHeight
     (+)
@@ -26,21 +27,21 @@ update msg model =
       model
 
 gridWidth
-  = 40
+  = 20
 
 gridHeight
-  = 40
+  = 20
 
 maxValue
-  = gridWidth + gridHeight
+  = gridWidth + gridHeight * 2
 
 cellSize = 10
 
 imgWidth
-  = gridWidth * cellSize
+  = gridWidth * cellSize * 2
 
 imgHeight
-  = gridHeight * cellSize
+  = gridHeight * cellSize * 2
 
 view model =
   svg
@@ -48,10 +49,10 @@ view model =
     , height ( String.fromFloat imgHeight )
     , viewBox "0 0 400 400"
     ]
-    ( Grid.foldl
+    ( gridFoldl
         (::)
         []
-        ( Grid.indexedMap
+        ( indexedGridMap
             ( \gX gY val ->
               rect
                 [ x ( String.fromInt ( gX * cellSize ) )
@@ -69,6 +70,75 @@ view model =
             model
         )
     )
+
+type alias Grid a = Array ( Array (a, a), Array (a, a) )
+
+-- Width and height are doubled because we must have an even number of blocks.
+initGrid : Int -> Int -> (Int -> Int -> a) -> Grid a
+initGrid width height f =
+  Array.initialize
+    width
+    ( \x ->
+      ( Array.initialize
+        height
+        ( \y ->
+          ( f (x * 2) (y * 2)
+          , f ((x * 2) + 1) (y * 2)
+          )
+        )
+      , Array.initialize
+        height
+        ( \y ->
+          ( f (x * 2) ((y * 2) + 1)
+          , f ((x * 2) + 1) ((y * 2) + 1)
+          )
+        )
+      )
+    )
+
+indexedGridMap : (Int -> Int -> a -> b) -> Grid a -> Grid b
+indexedGridMap f =
+  Array.indexedMap
+    ( \x rows ->
+      ( Array.indexedMap
+          ( \y values ->
+            ( f (x*2) (y*2) (Tuple.first values )
+            , f ((x*2)+1) (y*2) ( Tuple.second values )
+            )
+          )
+          ( Tuple.first rows)
+      , Array.indexedMap
+          ( \y values ->
+            ( f (x*2) ((y*2)+1) ( Tuple.first values )
+            , f ((x*2)+1) ((y*2)+1) ( Tuple.second values )
+            )
+          )
+          ( Tuple.second rows)
+      )
+    )
+
+gridFoldl : (a -> b -> b) -> b -> Grid a -> b
+gridFoldl f acc =
+  Array.foldl
+    ( \(r1, r2) a1 ->
+      let
+          a2 = Array.foldl
+                 ( \(v1, v2) a3 ->
+                    f v2 ( f v1 a3 )
+                 )
+                 a1
+                 r1
+      in
+        Array.foldl
+          ( \(v3, v4) a4 ->
+            f v4 ( f v3 a4 )
+          )
+          a2
+          r2
+    )
+    acc
+
+
 --    , text_
 --      [ x ( String.fromFloat (imgWidth / 2) )
 --      , y ( String.fromFloat (imgHeight / 2) )
