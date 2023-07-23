@@ -1,30 +1,57 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Events as E
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Array exposing (Array)
 -- import Grid
 
 main =
-  Browser.sandbox
+  Browser.element
     { init = init
     , update = update
     , view = view
+    , subscriptions = subscriptions
     }
 
-init =
-  initGrid
+init : () -> (Model, Cmd Msg)
+init () =
+  ( initGrid
     gridWidth
     gridHeight
     (+)
+  , Cmd.none
+  )
 
-type Msg = Update
+type Msg =
+  TimeDelta Float
 
+type alias Model = Grid Int
+
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Update ->
-      model
+    TimeDelta delta ->
+      ( simulate model (frameRate / delta)
+      , Cmd.none
+      )
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+  E.onAnimationFrameDelta TimeDelta
+
+simulate : Grid Int -> Float -> Grid Int
+simulate grid frames =
+  indexedGridMap
+    ( \_ _ v ->
+        v + round ( frames )
+        |> modBy maxValue
+    )
+    grid
+
+frameRate
+  = 30.0
 
 gridWidth
   = 20
