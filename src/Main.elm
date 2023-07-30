@@ -17,23 +17,33 @@ main =
 
 init : () -> (Model, Cmd Msg)
 init () =
-  ( initGrid
-    gridWidth
-    gridHeight
-    (+)
+  ( { time = 0.0
+    , map =
+        initGrid
+        gridWidth
+        gridHeight
+        (+)
+    }
   , Cmd.none
   )
 
 type Msg =
   TimeDelta Float
 
-type alias Model = Grid Int
+type alias Model =
+  { map : Grid Int
+  , time : Float
+  }
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     TimeDelta delta ->
-      ( simulate model (frameRate / delta)
+      ( if model.time + delta > 1.0 / frameRate then
+          { map = simulate model.map
+          , time = 0.0 }
+        else
+          { model | time = model.time + delta }
       , Cmd.none
       )
 
@@ -41,17 +51,17 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
   E.onAnimationFrameDelta TimeDelta
 
-simulate : Grid Int -> Float -> Grid Int
-simulate grid frames =
+simulate : Grid Int -> Grid Int
+simulate grid =
   indexedGridMap
     ( \_ _ v ->
-        v + round ( frames )
+        v + 1
         |> modBy maxValue
     )
     grid
 
 frameRate
-  = 30.0
+  = 0.001
 
 gridWidth
   = 20
@@ -70,7 +80,7 @@ imgWidth
 imgHeight
   = gridHeight * cellSize * 2
 
-view model =
+view { map, time } =
   svg
     [ width ( String.fromFloat imgWidth )
     , height ( String.fromFloat imgHeight )
@@ -94,7 +104,7 @@ view model =
                 ]
                 []
             )
-            model
+            map
         )
     )
 
