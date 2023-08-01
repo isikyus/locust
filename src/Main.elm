@@ -20,9 +20,14 @@ init () =
   ( { time = 0.0
     , map =
         initGrid
-        gridWidth
-        gridHeight
-        (+)
+          gridWidth
+          gridHeight
+          ( \x y ->
+            ( x + y
+            , x
+            , y
+            )
+          )
     }
   , Cmd.none
   )
@@ -31,7 +36,7 @@ type Msg =
   TimeDelta Float
 
 type alias Model =
-  { map : Grid Int
+  { map : Grid (Int, Int, Int)
   , time : Float
   }
 
@@ -51,7 +56,7 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
   E.onAnimationFrameDelta TimeDelta
 
-simulate : Grid Int -> Grid Int
+simulate : Grid a -> Grid a
 simulate grid =
   gridShift 1 grid
 
@@ -82,11 +87,11 @@ view { map, time } =
     , viewBox "0 0 400 400"
     ]
     ( gridFoldl
-        (::)
+        (++)
         []
         ( indexedGridMap
-            ( \gX gY val ->
-              rect
+          ( \gX gY (val, v1, v2) ->
+            [ rect
                 [ x ( String.fromInt ( gX * cellSize ) )
                 , y ( String.fromInt ( gY * cellSize ) )
                 , width ( String.fromInt cellSize )
@@ -98,8 +103,20 @@ view { map, time } =
                 , fill "green"
                 ]
                 []
-            )
-            map
+            , text_
+                [ x ( String.fromFloat ( ( toFloat gX ) * toFloat cellSize ) )
+                , y ( String.fromFloat ( ( toFloat gY + 0.6 ) * toFloat cellSize ) )
+                , fontSize "3"
+                ]
+                [ text
+                    (  ( String.fromInt v1 )
+                    ++ ", "
+                    ++ ( String.fromInt v2 )
+                    )
+                ]
+            ]
+          )
+          map
         )
     )
 
