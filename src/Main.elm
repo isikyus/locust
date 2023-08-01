@@ -135,13 +135,13 @@ indexedGridMap f =
       ( Array.indexedMap
           ( \y values ->
             ( f (x*2) (y*2) (Tuple.first values )
-            , f ((x*2)+1) (y*2) ( Tuple.second values )
+            , f (x*2) ((y*2)+1) ( Tuple.second values )
             )
           )
           ( Tuple.first rows)
       , Array.indexedMap
           ( \y values ->
-            ( f (x*2) ((y*2)+1) ( Tuple.first values )
+            ( f ((x*2)+1) ((y*2)) ( Tuple.first values )
             , f ((x*2)+1) ((y*2)+1) ( Tuple.second values )
             )
           )
