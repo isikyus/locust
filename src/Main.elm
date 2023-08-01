@@ -234,10 +234,3 @@ gridShift i g =
         , arrayShift r2
         )
       )
-
---    , text_
---      [ x ( String.fromFloat (imgWidth / 2) )
---      , y ( String.fromFloat (imgHeight / 2) )
---      , fill "green"
---      ]
---      [ text "Locust has Landed" ]
