@@ -53,12 +53,7 @@ subscriptions _ =
 
 simulate : Grid Int -> Grid Int
 simulate grid =
-  indexedGridMap
-    ( \_ _ v ->
-        v + 1
-        |> modBy maxValue
-    )
-    grid
+  gridShift 1 grid
 
 frameRate
   = 0.001
@@ -175,6 +170,53 @@ gridFoldl f acc =
     )
     acc
 
+-- Shift the grid over some number of cells (quarter-boxes) diagonally
+-- For now, only uses the sign of the index
+gridShift : Int -> Grid a -> Grid a
+gridShift i g =
+  let
+      maybeReverse =
+        if i >= 0 then
+          identity
+        else
+          List.reverse
+
+      -- 1D shift: rotate a list of pairs by one pair-element
+      listShift : List (b, b) -> List (b, b)
+      listShift l =
+        case l of
+          [] ->
+            []
+
+          (a, b) :: rest ->
+            ( List.foldl
+              ( \(c, d) (first, carry, newRows) ->
+                ( first
+                , d
+                , newRows ++ [(carry, c)]
+                )
+              )
+              (a, b, [])
+              rest
+            )
+            |> ( \(first, last, newRows) ->
+                 (last, first) :: newRows
+               )
+
+      arrayShift a =
+        Array.toList a
+          |> maybeReverse
+          |> listShift
+          |> maybeReverse
+          |> Array.fromList
+  in
+    arrayShift g
+    |> Array.map
+      ( \( r1, r2 ) ->
+        ( r1 -- arrayShift r1
+        , r2 -- arrayShift r2
+        )
+      )
 
 --    , text_
 --      [ x ( String.fromFloat (imgWidth / 2) )
