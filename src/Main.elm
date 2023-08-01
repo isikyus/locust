@@ -213,8 +213,8 @@ gridShift i g =
     arrayShift g
     |> Array.map
       ( \( r1, r2 ) ->
-        ( r1 -- arrayShift r1
-        , r2 -- arrayShift r2
+        ( arrayShift r1
+        , arrayShift r2
         )
       )
 
