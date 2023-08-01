@@ -18,6 +18,7 @@ main =
 init : () -> (Model, Cmd Msg)
 init () =
   ( { time = 0.0
+    , tick = 0
     , map =
         initGrid
           gridWidth
@@ -38,6 +39,7 @@ type Msg =
 type alias Model =
   { map : Grid (Int, Int, Int)
   , time : Float
+  , tick : Int
   }
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -45,8 +47,10 @@ update msg model =
   case msg of
     TimeDelta delta ->
       ( if model.time + delta > 1.0 / frameRate then
-          { map = simulate model.map
-          , time = 0.0 }
+          { map = simulate model
+          , time = 0.0
+          , tick = model.tick + 1
+          }
         else
           { model | time = model.time + delta }
       , Cmd.none
@@ -56,9 +60,11 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
   E.onAnimationFrameDelta TimeDelta
 
-simulate : Grid a -> Grid a
-simulate grid =
-  gridShift 1 grid
+simulate : { r | map: Grid a, tick: Int } -> Grid a
+simulate model =
+  gridShift
+    ( -1 ^ model.tick )
+    model.map
 
 frameRate
   = 0.001
@@ -197,6 +203,7 @@ gridShift i g =
           identity
         else
           List.reverse
+            >> List.map ( \(a, b) -> (b, a) )
 
       -- 1D shift: rotate a list of pairs by one pair-element
       listShift : List (b, b) -> List (b, b)
