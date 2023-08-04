@@ -62,9 +62,22 @@ subscriptions _ =
 
 simulate : { r | map: Grid a, tick: Int } -> Grid a
 simulate model =
-  gridShift
-    ( -1 ^ model.tick )
-    model.map
+  let
+      offset = remainderBy 2 model.tick
+  in
+    gridShift
+      offset
+      ( blockGridMap
+        blockOperation
+        ( gridShift
+          -offset
+          model.map
+        )
+      )
+
+blockOperation : Block a -> Block a
+blockOperation ((a, b), (c, d)) =
+  ((b, b), (d, a))
 
 frameRate
   = 0.001
@@ -170,6 +183,22 @@ indexedGridMap f =
           )
           ( Tuple.second rows)
       )
+    )
+
+type alias Block a = ((a, a), (a, a))
+
+blockGridMap : ( Block a -> Block b ) -> Grid a -> Grid b
+blockGridMap f =
+  Array.map
+    ( \(row1, row2) ->
+      List.map2
+          ( \pair1 pair2 -> f (pair1, pair2) )
+          ( Array.toList row1 )
+          ( Array.toList row2 )
+        |> List.unzip
+        |> Tuple.mapBoth
+             Array.fromList
+             Array.fromList
     )
 
 gridFoldl : (a -> b -> b) -> b -> Grid a -> b
