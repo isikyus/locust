@@ -198,6 +198,9 @@ gridFoldl f acc =
 gridShift : Int -> Grid a -> Grid a
 gridShift i g =
   let
+      rotation = (abs i) // 2
+      blockOffset = modBy 2 i
+
       maybeReverse =
         if i >= 0 then
           identity
@@ -227,10 +230,32 @@ gridShift i g =
                  (last, first) :: newRows
                )
 
+      -- Assumes the list is shorter than the amount we're trying to rotate by
+      listRotate : Int -> List c -> List c
+      listRotate n l =
+        case l of
+          [] ->
+            []
+
+          first :: rest ->
+            if n == 0 then
+              first :: rest
+            else
+              listRotate
+                ( n - 1 )
+                rest ++ [first]
+
       arrayShift a =
         Array.toList a
           |> maybeReverse
-          |> listShift
+          |> List.reverse
+          |> listRotate ( abs rotation )
+          |> List.reverse
+          |> ( if blockOffset > 0 then
+                 listShift
+               else
+                 identity
+             )
           |> maybeReverse
           |> Array.fromList
   in
